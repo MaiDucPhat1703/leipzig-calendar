@@ -83,16 +83,16 @@ for(const id of ['calgroup','barsgroup','summarygroup'])$(id).onchange=render;
 $('trendgroup').onchange=renderTrend;$('titlegroup').onchange=renderTitles;
 
 let busy=false,timer=null,nextAt=0;
-function schedule(){clearTimeout(timer);nextAt=Date.now()+60000;timer=setTimeout(()=>{if(!document.hidden)sync();else schedule()},60000)}
+function schedule(){clearTimeout(timer);nextAt=Date.now()+10000;timer=setTimeout(()=>{if(!document.hidden)sync();else schedule()},10000)}
 async function sync(){if(busy)return;busy=true;$('refresh').disabled=true;$('refresh').textContent='Đang cập nhật…';$('syncstatus').textContent='Đang tải bản dữ liệu mới…';$('syncstatus').className='syncing';
  try{const response=await fetch('https://leipzig-calendar-api.ducphat100.workers.dev/api/calendar',{cache:'no-store',signal:AbortSignal.timeout(55000)});if(!response.ok)throw new Error();const d=await response.json();d.stale=Boolean(d.stale)||Date.now()-Date.parse(d.collectedAt)>20*60*1000;d.error=d.error||(d.stale?'Đang hiển thị dữ liệu gần nhất; nguồn lịch chưa đồng bộ thành công.':'');if(!Array.isArray(d.records))throw new Error();const first=!data;
  if(first||Date.parse(d.collectedAt)>=Date.parse(data.collectedAt))data=d;
  if(first)options();else refreshGroupOptions();
  const time=new Date(data.collectedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});$('update').textContent='Đồng bộ gần nhất: '+time+' (giờ Việt Nam)';$('source').href=data.source;
- $('syncstatus').textContent=d.stale?'Chưa đồng bộ được · giữ dữ liệu gần nhất':'Đã kết nối · tự cập nhật 60 giây';$('syncstatus').className=d.stale?'stale':'connected';
+ $('syncstatus').textContent=d.stale?'Chưa đồng bộ được · giữ dữ liệu gần nhất':'Đã kết nối · tự cập nhật 10 giây';$('syncstatus').className=d.stale?'stale':'connected';
  $('error').hidden=!d.stale;$('error').textContent=d.error||'';
  render();
- }catch{$('syncstatus').textContent='Mất kết nối · sẽ tự thử lại';$('syncstatus').className='stale';$('error').hidden=false;$('error').textContent=data?'Chưa lấy được dữ liệu mới. Dữ liệu gần nhất được giữ nguyên; trang sẽ thử lại sau 60 giây.':'Chưa kết nối được lịch UII. Trang sẽ tự thử lại sau 60 giây, hoặc bạn có thể bấm Cập nhật ngay.'}
+ }catch{$('syncstatus').textContent='Mất kết nối · sẽ tự thử lại';$('syncstatus').className='stale';$('error').hidden=false;$('error').textContent=data?'Chưa lấy được dữ liệu mới. Dữ liệu gần nhất được giữ nguyên; trang sẽ thử lại sau 10 giây.':'Chưa kết nối được lịch UII. Trang sẽ tự thử lại sau 10 giây, hoặc bạn có thể bấm Cập nhật ngay.'}
  finally{busy=false;$('refresh').disabled=false;$('refresh').textContent='Cập nhật ngay';schedule()}}
 if(data){options();render();const time=new Date(data.collectedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});$('update').textContent='Dữ liệu gần nhất: '+time+' (giờ Việt Nam)';}
 $('refresh').onclick=sync;document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()>=nextAt)sync()});window.addEventListener('online',sync);
