@@ -2,6 +2,17 @@
 
 Giữ nguyên giao diện, các bộ lọc nhóm độc lập, lịch ngày, zoom tuần, chọn cột vàng, phân tích tiêu đề và xuất PDF.
 
+## Cập nhật repository đã có
+
+1. Giải nén ZIP, không upload nguyên file ZIP.
+2. Dùng GitHub Desktop mở repository leipzig-calendar hiện tại → Repository → Show in Explorer.
+3. Copy toàn bộ nội dung bên trong thư mục leipzig-github-pages vào repository, chọn thay thế các file cũ. Giữ đúng thư mục .github/workflows/pages.yml; không đặt pages.yml ở thư mục gốc.
+4. Commit to main rồi Push origin. Giữ Settings → Pages → Source là GitHub Actions.
+5. Lượt push tự triển khai giao diện mới. Sau đó schedule sẽ yêu cầu GitHub chạy mỗi 5 phút; không cần bấm Run workflow mỗi lần. GitHub có thể chạy trễ hoặc bỏ qua lượt khi quá tải.
+6. Trong Actions, kiểm tra lượt có sự kiện schedule để xác nhận tự động thực sự hoạt động. Có cấu hình lịch chưa đảm bảo đã có lượt tự chạy thành công.
+
+Nếu upload bằng trình duyệt, cập nhật ui và scripts; riêng workflow phải sửa hoặc tạo đúng đường dẫn .github/workflows/pages.yml trong Code. Upload ZIP vào repository không triển khai website.
+
 ## Hướng dẫn Windows với GitHub Desktop
 
 1. Giải nén ZIP. Bên trong `leipzig-github-pages` có `ui`, `scripts`, `.github` và README này.
@@ -18,7 +29,7 @@ Không cần npm install, API key hoặc token tự tạo.
 
 ## Cập nhật dữ liệu
 
-GitHub Pages là web tĩnh. Actions lấy lịch UII mỗi 5 phút và deploy dữ liệu mới; lịch chạy có thể trễ. Đây là cập nhật định kỳ, không realtime từng giây. Trình duyệt kiểm tra bản dữ liệu đã deploy mỗi 60 giây.
+GitHub Pages là web tĩnh. Actions lấy lịch UII mỗi 5 phút và deploy dữ liệu mới; lịch chạy có thể trễ. Đây là cập nhật định kỳ, không realtime từng giây. Trình duyệt kiểm tra bản dữ liệu đã deploy mỗi 15 giây.
 
 **Cập nhật ngay** trên web chỉ tải snapshot trên Pages. Muốn ép lấy lịch UII ngay: vào Actions → Run workflow, chờ xanh rồi cập nhật trang.
 
@@ -54,4 +65,6 @@ Mở http://localhost:8080. Sửa file trong `ui/`, commit và push bằng GitHu
 - https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 - https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 
-Đã kiểm tra build tại máy tạo gói. Chưa chạy workflow trong tài khoản GitHub của bạn.
+Đã kiểm tra cú pháp và build của gói. Việc tự chạy theo lịch cần kiểm tra qua sự kiện schedule trong Actions của repository.
+
+Hai bảng tổng hợp nhóm và nội dung họp có phân trang 7 dòng. Xuất PDF vẫn lấy đầy đủ các trang.
