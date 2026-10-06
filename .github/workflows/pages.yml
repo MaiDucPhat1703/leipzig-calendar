@@ -3,8 +3,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: '3,8,13,18,23,28,33,38,43,48,53,58 * * * *'
 permissions:
   contents: read
   pages: write
@@ -21,14 +19,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Fetch approved Leipzig bookings
-        run: python scripts/collect.py
       - name: Build website
         run: node scripts/build-pages.mjs
       - uses: actions/configure-pages@v5
