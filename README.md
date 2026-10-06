@@ -1,70 +1,16 @@
-# Leipzig – GitHub Pages
+# Leipzig – GitHub Pages + Cloudflare
 
-Giữ nguyên giao diện, các bộ lọc nhóm độc lập, lịch ngày, zoom tuần, chọn cột vàng, phân tích tiêu đề và xuất PDF.
+## Cập nhật repository hiện tại
+1. Giải nén ZIP.
+2. Trên GitHub ở gốc repository, Add file → Upload files; kéo ui, scripts và README.md vào rồi Commit changes. Không kéo thư mục cha hoặc ZIP.
+3. Mở .github/workflows/pages.yml trên GitHub → Edit; thay toàn bộ nội dung bằng file cùng đường dẫn trong ZIP → Commit changes.
+4. Giữ Settings → Pages → Source: GitHub Actions. Chờ lượt triển khai mới thành công, rồi mở web và Ctrl+F5.
 
-## Cập nhật repository đã có
+## Cơ chế cập nhật
+Web gọi https://leipzig-calendar-api.ducphat100.workers.dev/api/calendar khi mở và mỗi 60 giây sau khi lần kiểm tra trước hoàn tất. Khi tab ở nền, việc kiểm tra tạm dừng; quay lại sẽ kiểm tra khi đến hạn. Worker lấy lịch UII, dùng dữ liệu trong bộ nhớ tối đa 60 giây trên mỗi instance và trả dữ liệu đã lọc. Không cần Cron Trigger. Không bảo đảm realtime từng giây.
 
-1. Giải nén ZIP, không upload nguyên file ZIP.
-2. Dùng GitHub Desktop mở repository leipzig-calendar hiện tại → Repository → Show in Explorer.
-3. Copy toàn bộ nội dung bên trong thư mục leipzig-github-pages vào repository, chọn thay thế các file cũ. Giữ đúng thư mục .github/workflows/pages.yml; không đặt pages.yml ở thư mục gốc.
-4. Commit to main rồi Push origin. Giữ Settings → Pages → Source là GitHub Actions.
-5. Lượt push tự triển khai giao diện mới. Sau đó schedule sẽ yêu cầu GitHub chạy mỗi 5 phút; không cần bấm Run workflow mỗi lần. GitHub có thể chạy trễ hoặc bỏ qua lượt khi quá tải.
-6. Trong Actions, kiểm tra lượt có sự kiện schedule để xác nhận tự động thực sự hoạt động. Có cấu hình lịch chưa đảm bảo đã có lượt tự chạy thành công.
+Actions chỉ triển khai giao diện khi push hoặc chạy thủ công, không còn chạy theo lịch. Không cần Run workflow để lấy lịch mới. Snapshot ui/data.json chỉ là dữ liệu dự phòng ban đầu. Nếu API lỗi, web giữ dữ liệu đang có và báo lỗi, không giả vờ đồng bộ thành công.
 
-Nếu upload bằng trình duyệt, cập nhật ui và scripts; riêng workflow phải sửa hoặc tạo đúng đường dẫn .github/workflows/pages.yml trong Code. Upload ZIP vào repository không triển khai website.
+Worker cho phép origin https://maiducphat1703.github.io. Nếu đổi tài khoản hoặc tên miền website, phải đổi CORS trong Worker. Phạm vi: Leipzig, lịch màu đen, năm 2026.
 
-## Hướng dẫn Windows với GitHub Desktop
-
-1. Giải nén ZIP. Bên trong `leipzig-github-pages` có `ui`, `scripts`, `.github` và README này.
-2. Cài https://desktop.github.com/ rồi đăng nhập GitHub.
-3. **File → New repository**. Name: `leipzig-calendar`. Chọn nơi lưu, bấm **Create repository**.
-4. **Repository → Show in Explorer**. Copy TOÀN BỘ nội dung bên trong thư mục giải nén vào thư mục repository vừa tạo, kể cả `.github` và `.gitignore`. Không copy thư mục cha bao ngoài.
-5. Trong Desktop, nhập Summary `Add Leipzig dashboard`, bấm **Commit to main**.
-6. **Publish repository**. Bỏ chọn **Keep this code private** nếu dùng GitHub Free rồi Publish. Repository/web công khai sẽ chứa tên người đặt và tiêu đề cuộc họp trong dữ liệu; gói không chứa token hoặc email.
-7. Trên github.com mở repository → **Settings → Pages → Build and deployment → Source → GitHub Actions**. Không chọn Deploy from a branch.
-8. **Actions → Update UII calendar and deploy Pages → Run workflow → main → Run workflow**. Bật Actions nếu GitHub yêu cầu. Chờ các bước chuyển xanh.
-9. **Settings → Pages → Visit site**. URL thường là `https://TEN-GITHUB.github.io/leipzig-calendar/`.
-
-Không cần npm install, API key hoặc token tự tạo.
-
-## Cập nhật dữ liệu
-
-GitHub Pages là web tĩnh. Actions lấy lịch UII mỗi 5 phút và deploy dữ liệu mới; lịch chạy có thể trễ. Đây là cập nhật định kỳ, không realtime từng giây. Trình duyệt kiểm tra bản dữ liệu đã deploy mỗi 15 giây.
-
-**Cập nhật ngay** trên web chỉ tải snapshot trên Pages. Muốn ép lấy lịch UII ngay: vào Actions → Run workflow, chờ xanh rồi cập nhật trang.
-
-Nếu Fetch thất bại, workflow dừng và giữ website đã deploy. Web báo dữ liệu cũ khi timestamp quá 20 phút. Snapshot mới nằm trong website được deploy, không commit trở lại `ui/data.json` trong repository.
-
-Sau 60 ngày không hoạt động repository công khai, GitHub có thể tắt lịch chạy. Vào Actions → Enable workflow để bật lại.
-
-Phạm vi cố định: năm 2026, phòng Leipzig ID1034, lịch được duyệt màu đen. Không tự chuyển sang năm 2027.
-
-## Khắc phục lỗi
-
-- Không thấy workflow: kiểm tra `.github/workflows/pages.yml` nằm đúng ở gốc repository.
-- Web 404: Pages Source phải là GitHub Actions; branch main, workflow phải xanh; đợi Pages xuất bản.
-- Fetch đỏ: xem Actions log; nguồn UII có thể tạm lỗi hoặc đổi cấu trúc. Chạy lại workflow. Website cũ vẫn tồn tại.
-- Lỗi quyền: Pages phải bật, giữ quyền `pages: write`, `id-token: write`; môi trường github-pages cho phép main.
-- Không thấy dữ liệu mới: kiểm tra thời gian đồng bộ, chạy workflow rồi Ctrl+F5 sau deploy.
-
-## Chạy và sửa trên máy
-
-Cần Python3 và Node22 trở lên:
-
-```bash
-python scripts/collect.py
-node scripts/build-pages.mjs
-python -m http.server 8080 --directory dist
-```
-
-Mở http://localhost:8080. Sửa file trong `ui/`, commit và push bằng GitHub Desktop.
-
-## Tài liệu GitHub chính thức
-
-- https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
-- https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
-- https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
-
-Đã kiểm tra cú pháp và build của gói. Việc tự chạy theo lịch cần kiểm tra qua sự kiện schedule trong Actions của repository.
-
-Hai bảng tổng hợp nhóm và nội dung họp có phân trang 7 dòng. Xuất PDF vẫn lấy đầy đủ các trang.
+API đã trả dữ liệu trong ảnh người dùng. Gói đã kiểm tra cú pháp và build; chưa triển khai bản giao diện này vào repository người dùng.
