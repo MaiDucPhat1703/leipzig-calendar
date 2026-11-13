@@ -17,6 +17,18 @@ function previewLeipzigNotifications() {
   console.log(JSON.stringify({ through: source.through, byStatus: counts }));
 }
 
+function sendLeipzigTestEmail() {
+  const settings = PropertiesService.getScriptProperties().getProperties();
+  const options = leipzigSenderOptions_(settings);
+  const recipient = Session.getEffectiveUser().getEmail();
+  GmailApp.sendEmail(
+    recipient,
+    '[Thử nghiệm] Xác nhận đặt phòng Leipzig',
+    'Đây là thư thử để kiểm tra địa chỉ gửi. Chưa có thông báo nào được gửi đến người đặt phòng.',
+    options,
+  );
+}
+
 function startLeipzigNotifications() {
   checkLeipzigNotifications();
   stopLeipzigNotifications();
@@ -64,7 +76,7 @@ function checkLeipzigNotifications() {
       try {
         GmailApp.sendEmail(
           booking.email,
-          'Xác nhận đặt phòng Leipzig',
+          'Đặt phòng Leipzig thành công',
           [
             'Chào bạn,',
             '',
