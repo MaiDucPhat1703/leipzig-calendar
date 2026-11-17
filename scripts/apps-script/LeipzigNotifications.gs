@@ -3,7 +3,7 @@ const UII = {
   campuses: [
     {
       name: 'B1-1501 Co-working Space',
-      address: '279 Nguyễn Tri Phương, Phường Diên Hồng, Thành phố Hồ Chí Minh',
+      address: 'Lầu 15, 279 Nguyễn Tri Phương, Phường Diên Hồng, Thành phố Hồ Chí Minh',
       cursor: 'LEIPZIG_SCANNED_THROUGH',
       rooms: { 1034: 'Leipzig' },
     },
