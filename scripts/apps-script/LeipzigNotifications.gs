@@ -4,6 +4,7 @@ const UII = {
     {
       name: 'B1-1501 Co-working Space',
       address: 'Lầu 15, 279 Nguyễn Tri Phương, Phường Diên Hồng, Thành phố Hồ Chí Minh',
+      mapQuery: '279 Nguyễn Tri Phương, Phường Diên Hồng, Thành phố Hồ Chí Minh',
       cursor: 'LEIPZIG_SCANNED_THROUGH',
       rooms: { 1034: 'Leipzig' },
     },
@@ -154,7 +155,7 @@ function sendUiiBookingEmail_(booking, options, subjectPrefix = '') {
     : startTime + ' ngày ' + startDate + ' đến ' + endTime + ' ngày ' + uiiDisplayDate_(endDay);
   const fields = [
     ['Phòng', booking.room],
-    ['Địa chỉ', booking.address],
+    ['Địa chỉ', booking.address, booking.mapQuery],
     ['Thời gian', time],
     ['Nội dung', booking.title.replaceAll('\u2013', '-')],
   ];
@@ -175,10 +176,15 @@ function sendUiiBookingEmail_(booking, options, subjectPrefix = '') {
     'Trân trọng,',
     signature,
   ].join('\n');
-  const rows = fields.map(([label, value]) =>
-    '<tr><td style="padding:0 0 10px;overflow-wrap:anywhere"><strong>' +
-    label + ':</strong> ' + escapeUiiEmailHtml_(value) + '</td></tr>'
-  ).join('');
+  const rows = fields.map(([label, value, mapQuery]) => {
+    const text = escapeUiiEmailHtml_(value);
+    const display = mapQuery
+      ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(mapQuery) +
+        '" style="color:#1155cc;text-decoration:underline">' + text + '</a>'
+      : text;
+    return '<tr><td style="padding:0 0 10px;overflow-wrap:anywhere"><strong>' +
+      label + ':</strong> ' + display + '</td></tr>';
+  }).join('');
   const htmlBody = [
     '<div lang="vi" style="max-width:600px;margin:0 auto;padding:16px;color:#1b2b28;font:16px/1.55 Arial,sans-serif">',
     '<p style="margin:0 0 16px">Chào bạn,</p>',
@@ -289,6 +295,7 @@ function fetchUiiCampusBookings_(campus, query, today, through, currentTime) {
               cursor: campus.cursor,
               room: roomName,
               address: campus.address,
+              mapQuery: campus.mapQuery,
               status: form.status,
               email: String(form.email || '').trim(),
               title: String(event.title || 'Đặt phòng ' + roomName),
