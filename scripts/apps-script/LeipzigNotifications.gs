@@ -29,6 +29,38 @@ function sendLeipzigTestEmail() {
   );
 }
 
+function inspectLeipzigTestBooking() {
+  const settings = PropertiesService.getScriptProperties().getProperties();
+  const booking = findLeipzigTestBooking_(settings);
+  console.log(JSON.stringify(booking ? {
+    visible: true, id: booking.id, status: booking.status,
+  } : { visible: false }));
+}
+
+function sendLeipzigBookingTestEmail() {
+  const settings = PropertiesService.getScriptProperties().getProperties();
+  const options = leipzigSenderOptions_(settings);
+  const booking = findLeipzigTestBooking_(settings);
+  if (!booking || !/^\d+$/.test(settings.APPROVED_STATUS || '') ||
+      booking.status !== Number(settings.APPROVED_STATUS)) {
+    throw new Error('Lượt thử chưa xuất hiện với mã đã duyệt được cấu hình.');
+  }
+  const active = Session.getEffectiveUser().getEmail().toLowerCase();
+  if (booking.email.toLowerCase() !== active) {
+    throw new Error('Email trên form thử phải trùng với tài khoản đang chạy để thư chỉ gửi về bạn.');
+  }
+  GmailApp.sendEmail(booking.email, '[Thử nghiệm UII] Đặt phòng Leipzig thành công',
+    leipzigEmailBody_(booking), options);
+}
+
+function findLeipzigTestBooking_(settings) {
+  const title = (settings.TEST_BOOKING_TITLE || '').trim();
+  if (!title) throw new Error('Hãy đặt TEST_BOOKING_TITLE đúng với tiêu đề lượt thử trên UII.');
+  const matches = fetchLeipzigBookings_().bookings.filter(booking => booking.title.trim() === title);
+  if (matches.length > 1) throw new Error('Có nhiều lượt cùng tiêu đề; hãy dùng một tiêu đề thử riêng.');
+  return matches[0];
+}
+
 function startLeipzigNotifications() {
   checkLeipzigNotifications();
   stopLeipzigNotifications();
@@ -58,6 +90,7 @@ function checkLeipzigNotifications() {
     const previousThrough = settings.LEIPZIG_SCANNED_THROUGH;
     const baseline = {};
     let sent = 0;
+    let missingEmail = 0;
     let needsReview = 0;
 
     for (const booking of source.bookings) {
@@ -69,7 +102,10 @@ function checkLeipzigNotifications() {
         baseline[key] = 'existing';
         continue;
       }
-      if (!validLeipzigEmail_(booking.email)) continue;
+      if (!validLeipzigEmail_(booking.email)) {
+        missingEmail++;
+        continue;
+      }
 
       // Keep ambiguous sends visible for review instead of automatically sending twice.
       props.setProperty(key, 'sending');
@@ -77,18 +113,7 @@ function checkLeipzigNotifications() {
         GmailApp.sendEmail(
           booking.email,
           'Đặt phòng Leipzig thành công',
-          [
-            'Chào bạn,',
-            '',
-            'Lịch đặt phòng Leipzig của bạn đã được duyệt.',
-            'Tiêu đề: ' + booking.title,
-            'Bắt đầu: ' + booking.start,
-            'Kết thúc: ' + booking.end,
-            'Giờ Việt Nam',
-            '',
-            'Mã đặt phòng: ' + booking.id,
-            'Xem lịch: ' + LEIPZIG.source,
-          ].join('\n'),
+          leipzigEmailBody_(booking),
           mailOptions,
         );
       } catch {
@@ -100,10 +125,25 @@ function checkLeipzigNotifications() {
     }
     baseline.LEIPZIG_SCANNED_THROUGH = source.through;
     props.setProperties(baseline);
-    console.log(JSON.stringify({ sent, needsReview }));
+    console.log(JSON.stringify({ sent, existing: Object.keys(baseline).length - 1, missingEmail, needsReview }));
   } finally {
     lock.releaseLock();
   }
+}
+
+function leipzigEmailBody_(booking) {
+  return [
+    'Chào bạn,',
+    '',
+    'Lịch đặt phòng Leipzig của bạn đã được duyệt.',
+    'Tiêu đề: ' + booking.title,
+    'Bắt đầu: ' + booking.start,
+    'Kết thúc: ' + booking.end,
+    'Giờ Việt Nam',
+    '',
+    'Mã đặt phòng: ' + booking.id,
+    'Xem lịch: ' + LEIPZIG.source,
+  ].join('\n');
 }
 
 function leipzigSenderOptions_(settings) {
