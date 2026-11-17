@@ -3,11 +3,13 @@ const UII = {
   campuses: [
     {
       name: 'B1-1501 Co-working Space',
+      address: 'B1-1501 Co-working Space',
       cursor: 'LEIPZIG_SCANNED_THROUGH',
       rooms: { 1034: 'Leipzig' },
     },
     {
       name: 'V - 232/6 Vo Thi Sau',
+      address: '232/6 Võ Thị Sáu',
       cursor: 'V_ROOMS_SCANNED_THROUGH',
       rooms: {
         26: 'V051 - Collaboration',
@@ -64,8 +66,7 @@ function sendLeipzigBookingTestEmail() {
   if (booking.email.toLowerCase() !== active) {
     throw new Error('Email trên form thử phải trùng với tài khoản đang chạy để thư chỉ gửi về bạn.');
   }
-  GmailApp.sendEmail(booking.email, '[Thử nghiệm UII] Đặt phòng ' + booking.room + ' thành công',
-    leipzigEmailBody_(booking), options);
+  sendUiiBookingEmail_(booking, options, '[Thử nghiệm] ');
 }
 
 function findLeipzigTestBooking_(settings) {
@@ -127,12 +128,7 @@ function checkLeipzigNotifications() {
       // Keep ambiguous sends visible for review instead of automatically sending twice.
       props.setProperty(key, 'sending');
       try {
-        GmailApp.sendEmail(
-          booking.email,
-          'Đặt phòng ' + booking.room + ' thành công',
-          leipzigEmailBody_(booking),
-          mailOptions,
-        );
+        sendUiiBookingEmail_(booking, mailOptions);
       } catch {
         needsReview++;
         continue;
@@ -148,20 +144,61 @@ function checkLeipzigNotifications() {
   }
 }
 
-function leipzigEmailBody_(booking) {
-  return [
+function sendUiiBookingEmail_(booking, options, subjectPrefix = '') {
+  const startDate = uiiDisplayDate_(booking.day);
+  const endDay = booking.end.slice(0, 10);
+  const startTime = booking.start.slice(11, 16);
+  const endTime = booking.end.slice(11, 16);
+  const time = booking.day === endDay
+    ? startTime + '–' + endTime + ', ngày ' + startDate
+    : startTime + ' ngày ' + startDate + ' đến ' + endTime + ' ngày ' + uiiDisplayDate_(endDay);
+  const fields = [
+    ['Phòng', booking.room.replace(' - ', ' – ')],
+    ['Địa chỉ', booking.address],
+    ['Thời gian', time],
+    ['Nội dung', booking.title],
+  ];
+  const subject = subjectPrefix + '[UII] Xác nhận đặt phòng ' +
+    booking.room.split(' - ')[0] + ' ngày ' + startDate;
+  const approval = 'Lịch đặt phòng của bạn đã được duyệt.';
+  const instruction = 'Bạn có thể sử dụng phòng theo thông tin bên dưới:';
+  const signature = 'Vườn ươm Khởi nghiệp Viện Đổi mới sáng tạo.';
+  const textBody = [
     'Chào bạn,',
     '',
-    'Lịch đặt phòng của bạn đã được duyệt.',
-    'Phòng: ' + booking.room,
-    'Tiêu đề: ' + booking.title,
-    'Bắt đầu: ' + booking.start,
-    'Kết thúc: ' + booking.end,
-    'Giờ Việt Nam',
+    approval + ' ' + instruction,
     '',
-    'Mã đặt phòng: ' + booking.id,
-    'Xem lịch: ' + UII.source,
+    ...fields.map(([label, value]) => label + ': ' + value),
+    '',
+    'Xem lịch trên UII: ' + UII.source,
+    '',
+    'Trân trọng,',
+    signature,
   ].join('\n');
+  const rows = fields.map(([label, value]) =>
+    '<tr><td style="padding:0 0 10px;overflow-wrap:anywhere"><strong>' +
+    label + ':</strong> ' + escapeUiiEmailHtml_(value) + '</td></tr>'
+  ).join('');
+  const htmlBody = [
+    '<div lang="vi" style="max-width:600px;margin:0 auto;padding:16px;color:#1b2b28;font:16px/1.55 Arial,sans-serif">',
+    '<p style="margin:0 0 16px">Chào bạn,</p>',
+    '<p style="margin:0 0 16px"><strong>' + approval + '</strong> ' + instruction + '</p>',
+    '<table role="presentation" width="100%" style="background:#eaf5ef;border-radius:8px"><tr><td style="padding:16px 16px 6px">',
+    '<table role="presentation" width="100%" style="font:inherit">' + rows + '</table></td></tr></table>',
+    '<p style="margin:20px 0"><a href="' + UII.source + '" style="display:inline-block;padding:10px 16px;background:#123c37;color:#fff;border-radius:6px;font-weight:bold;text-decoration:none">Xem lịch trên UII</a></p>',
+    '<p style="margin:0">Trân trọng,<br><strong>' + signature + '</strong></p>',
+    '</div>',
+  ].join('');
+  GmailApp.sendEmail(booking.email, subject, textBody, { ...options, htmlBody });
+}
+
+function escapeUiiEmailHtml_(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function leipzigSenderOptions_(settings) {
@@ -251,12 +288,13 @@ function fetchUiiCampusBookings_(campus, query, today, through, currentTime) {
               id: String(form.id),
               cursor: campus.cursor,
               room: roomName,
+              address: campus.address,
               status: form.status,
               email: String(form.email || '').trim(),
               title: String(event.title || 'Đặt phòng ' + roomName),
               day: date,
-              start: leipzigDisplayTime_(start),
-              end: leipzigDisplayTime_(end),
+              start,
+              end,
             });
           }
         }
@@ -266,7 +304,7 @@ function fetchUiiCampusBookings_(campus, query, today, through, currentTime) {
   return bookings;
 }
 
-function leipzigDisplayTime_(value) {
-  const [year, month, day] = value.slice(0, 10).split('-');
-  return value.slice(11, 16) + ' ngày ' + day + '/' + month + '/' + year;
+function uiiDisplayDate_(value) {
+  const [year, month, day] = value.split('-');
+  return day + '/' + month + '/' + year;
 }
