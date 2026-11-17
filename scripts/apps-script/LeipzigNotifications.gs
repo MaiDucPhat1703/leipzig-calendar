@@ -3,13 +3,13 @@ const UII = {
   campuses: [
     {
       name: 'B1-1501 Co-working Space',
-      address: 'B1-1501 Co-working Space',
+      address: '279 Nguyễn Tri Phương, Phường Diên Hồng, Thành phố Hồ Chí Minh',
       cursor: 'LEIPZIG_SCANNED_THROUGH',
       rooms: { 1034: 'Leipzig' },
     },
     {
       name: 'V - 232/6 Vo Thi Sau',
-      address: '232/6 Võ Thị Sáu',
+      address: '232/6 Võ Thị Sáu, Phường Xuân Hòa, TP. Hồ Chí Minh',
       cursor: 'V_ROOMS_SCANNED_THROUGH',
       rooms: {
         26: 'V051 - Collaboration',
@@ -150,13 +150,13 @@ function sendUiiBookingEmail_(booking, options, subjectPrefix = '') {
   const startTime = booking.start.slice(11, 16);
   const endTime = booking.end.slice(11, 16);
   const time = booking.day === endDay
-    ? startTime + '–' + endTime + ', ngày ' + startDate
+    ? startTime + '-' + endTime + ', ngày ' + startDate
     : startTime + ' ngày ' + startDate + ' đến ' + endTime + ' ngày ' + uiiDisplayDate_(endDay);
   const fields = [
-    ['Phòng', booking.room.replace(' - ', ' – ')],
+    ['Phòng', booking.room],
     ['Địa chỉ', booking.address],
     ['Thời gian', time],
-    ['Nội dung', booking.title],
+    ['Nội dung', booking.title.replaceAll('\u2013', '-')],
   ];
   const subject = subjectPrefix + '[UII] Xác nhận đặt phòng ' +
     booking.room.split(' - ')[0] + ' ngày ' + startDate;
