@@ -41,7 +41,7 @@ function sendLeipzigTestEmail() {
   const recipient = Session.getEffectiveUser().getEmail();
   GmailApp.sendEmail(
     recipient,
-    '[Thử nghiệm] Xác nhận đặt phòng USI',
+    '[Thử nghiệm] Xác nhận đặt phòng UII',
     'Đây là thư thử để kiểm tra địa chỉ gửi. Chưa có thông báo nào được gửi đến người đặt phòng.',
     options,
   );
@@ -159,11 +159,11 @@ function sendUiiBookingEmail_(booking, options, subjectPrefix = '') {
     ['Thời gian', time],
     ['Nội dung', booking.title.replaceAll('\u2013', '-')],
   ];
-  const subject = subjectPrefix + '[USI] Xác nhận đặt phòng ' +
+  const subject = subjectPrefix + '[UII] Xác nhận đặt phòng ' +
     booking.room.split(' - ')[0] + ' ngày ' + startDate;
   const approval = 'Lịch đặt phòng của bạn đã được duyệt.';
   const instruction = 'Bạn có thể sử dụng phòng theo thông tin bên dưới:';
-  const signature = 'Vườn ươm Khởi nghiệp Viện Đổi mới sáng tạo.';
+  const signature = 'Viện Đổi mới sáng tạo.';
   const textBody = [
     'Chào bạn,',
     '',
@@ -171,7 +171,7 @@ function sendUiiBookingEmail_(booking, options, subjectPrefix = '') {
     '',
     ...fields.map(([label, value]) => label + ': ' + value),
     '',
-    'Xem lịch trên USI: ' + UII.source,
+    'Xem lịch trên UII: ' + UII.source,
     '',
     'Trân trọng,',
     signature,
@@ -191,7 +191,7 @@ function sendUiiBookingEmail_(booking, options, subjectPrefix = '') {
     '<p style="margin:0 0 16px"><strong>' + approval + '</strong> ' + instruction + '</p>',
     '<table role="presentation" width="100%" style="background:#eaf5ef;border-radius:8px"><tr><td style="padding:16px 16px 6px">',
     '<table role="presentation" width="100%" style="font:inherit">' + rows + '</table></td></tr></table>',
-    '<p style="margin:20px 0"><a href="' + UII.source + '" style="display:inline-block;padding:10px 16px;background:#123c37;color:#fff;border-radius:6px;font-weight:bold;text-decoration:none">Xem lịch trên USI</a></p>',
+    '<p style="margin:20px 0"><a href="' + UII.source + '" style="display:inline-block;padding:10px 16px;background:#123c37;color:#fff;border-radius:6px;font-weight:bold;text-decoration:none">Xem lịch trên UII</a></p>',
     '<p style="margin:0">Trân trọng,<br><strong>' + signature + '</strong></p>',
     '</div>',
   ].join('');
@@ -212,7 +212,7 @@ function leipzigSenderOptions_(settings) {
   if (!validLeipzigEmail_(active) || active !== (settings.SENDER_ACCOUNT || '').trim().toLowerCase()) {
     throw new Error('Tài khoản đang chạy phải trùng với SENDER_ACCOUNT.');
   }
-  const options = { name: 'Đặt phòng USI' };
+  const options = { name: 'Đặt phòng UII' };
   const sender = (settings.SENDER_FROM || '').trim();
   if (sender && sender.toLowerCase() !== active) {
     const alias = GmailApp.getAliases().find(address => address.toLowerCase() === sender.toLowerCase());
